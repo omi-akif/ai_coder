@@ -1,54 +1,165 @@
-# AiCoder Crew
+# AI Coder Crew
 
-Welcome to the AiCoder Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+Welcome to the AI Coder Crew project, powered by [crewAI](https://crewai.com). This project provides a multi-agent AI system with a **Planner** and **Coder** agent that work together to generate code based on your requirements.
+
+## Features
+
+- 🤖 **Planner Agent**: Analyzes requirements and creates detailed implementation plans
+- 💻 **Coder Agent**: Implements code following the planner's specifications
+- 🛠️ **File Tools**: Read, write, and list files during code generation
+- 🌐 **REST API**: Expose the coding agent via FastAPI
+- 🦙 **Ollama Support**: Works with local LLMs (no API key needed)
 
 ## Installation
 
-Ensure you have Python >=3.10 <3.14 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+Ensure you have Python >=3.10 <3.14 installed. This project uses Conda for environment management.
 
-First, if you haven't already, install uv:
+### 1. Create and Activate Environment
 
 ```bash
-pip install uv
+conda create -n coder_agent python=3.10
+conda activate coder_agent
 ```
 
-Next, navigate to your project directory and install the dependencies:
+### 2. Install Dependencies
 
-(Optional) Lock the dependencies and install them by using the CLI command:
 ```bash
-crewai install
+cd /home/akif/Coder/ai_coder
+pip install -e .
 ```
-### Customizing
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+## Configuration
 
-- Modify `src/ai_coder/config/agents.yaml` to define your agents
-- Modify `src/ai_coder/config/tasks.yaml` to define your tasks
-- Modify `src/ai_coder/crew.py` to add your own logic, tools and specific args
-- Modify `src/ai_coder/main.py` to add custom inputs for your agents and tasks
+### Using Ollama (Local LLM)
+
+The agents are configured to use Ollama with `qwen2.5:7b` by default. Make sure Ollama is running:
+
+```bash
+ollama list  # Check available models
+ollama serve # Start Ollama if not running
+```
+
+To use a different model, edit `src/ai_coder/config/agents.yaml` and change the `llm` field.
+
+### Customizing Agents and Tasks
+
+- **Agents**: Edit `src/ai_coder/config/agents.yaml`
+- **Tasks**: Edit `src/ai_coder/config/tasks.yaml`
+- **Tools**: Edit `src/ai_coder/tools/custom_tool.py`
+- **Main Logic**: Edit `src/ai_coder/crew.py`
 
 ## Running the Project
 
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
+### Option 1: Direct Execution
+
+Run the crew directly with a test example:
 
 ```bash
-$ crewai run
+conda run -n coder_agent python tests/test_crew.py
 ```
 
-This command initializes the ai_coder Crew, assembling the agents and assigning them tasks as defined in your configuration.
+Or modify `src/ai_coder/main.py` and run:
 
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+```bash
+conda run -n coder_agent python -m ai_coder.main
+```
 
-## Understanding Your Crew
+### Option 2: API Server (Recommended)
 
-The ai_coder Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+**First, install FastAPI and Uvicorn:**
+
+```bash
+cd /home/akif/Coder/ai_coder
+conda run -n coder_agent pip install fastapi "uvicorn[standard]"
+```
+
+**Then start the server:**
+
+```bash
+conda run -n coder_agent python -m uvicorn ai_coder.api_server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+> **Note**: The `--reload` flag makes the server restart automatically when you change code files.
+
+#### API Endpoints
+
+- **Health Check**: `GET /`
+- **Generate Code**: `POST /generate-code`
+
+#### API Documentation
+
+Once running, visit:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+#### Example API Request
+
+```bash
+curl -X POST http://localhost:8000/generate-code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "Python Calculator",
+    "requirements": "Create a simple calculator with add, subtract, multiply, and divide methods"
+  }'
+```
+
+Or using Python:
+
+```python
+import requests
+
+response = requests.post(
+    "http://localhost:8000/generate-code",
+    json={
+        "topic": "Python Calculator",
+        "requirements": "Create a calculator with basic operations"
+    }
+)
+
+print(response.json())
+```
+
+#### Test the API
+
+```bash
+# Make sure the server is running first, then:
+conda run -n coder_agent python tests/test_api.py
+```
+
+## How It Works
+
+1. **Planner Agent** receives your topic and requirements
+2. **Planner** creates a detailed implementation plan
+3. **Coder Agent** receives the plan and generates code
+4. **Coder** can use file tools to read/write/list files
+5. Results are returned to you
+
+## Project Structure
+
+```
+ai_coder/
+├── src/ai_coder/
+│   ├── config/
+│   │   ├── agents.yaml      # Agent configurations
+│   │   └── tasks.yaml       # Task definitions
+│   ├── tools/
+│   │   └── custom_tool.py   # File manipulation tools
+│   ├── api_server.py        # FastAPI server
+│   ├── crew.py              # Crew orchestration
+│   └── main.py              # CLI entry point
+├── tests/
+│   ├── test_crew.py         # Test crew execution
+│   └── test_api.py          # Test API endpoints
+└── pyproject.toml           # Project dependencies
+```
 
 ## Support
 
-For support, questions, or feedback regarding the AiCoder Crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
+For support, questions, or feedback:
+- [crewAI Documentation](https://docs.crewai.com)
+- [crewAI GitHub](https://github.com/joaomdmoura/crewai)
+- [Join Discord](https://discord.com/invite/X4JWnZnxPb)
 
-Let's create wonders together with the power and simplicity of crewAI.
+Let's create wonders together with the power of crewAI! 🚀
