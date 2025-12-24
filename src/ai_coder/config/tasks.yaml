@@ -1,0 +1,27 @@
+planning_task:
+  description: >
+    Analyze the following requirements for {topic}:
+    Requirements: {requirements}
+
+    Create a detailed, step-by-step implementation plan.
+    Break down the work into logical chunks.
+    Identify any necessary files, functions, or classes to be created.
+  expected_output: >
+    A comprehensive implementation plan document (markdown) containing:
+    1. Goal Description
+    2. Architecture/Design overview
+    3. Step-by-step Implementation details
+    4. Verification steps
+  agent: planner
+
+coder_task:
+  description: >
+    Using the implementation plan provided by the Planner, write the code for {topic}.
+    Ensure all requirements are met.
+    Focus on creating high-quality, working code.
+  expected_output: >
+    The complete source code implementation. 
+    This should include all necessary files and logic.
+    (Note: In a real scenario, this would involve writing files to disk.)
+  agent: coder
+  context: [planning_task]
